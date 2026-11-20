@@ -151,7 +151,7 @@ test('independent completion reports cancellation, timeout, infra and limit with
       head_sha: 'a'.repeat(40),
       status: 'completed',
       conclusion: reason === 'cancelled' ? 'cancelled' : reason === 'infra' ? 'failure' : 'success',
-      repository: { full_name: 'MeNn13/ai-for-developers-project-387' },
+      repository: { full_name: 'MeNn13/booking-calendar-opencode-v1-acceptance' },
     }
     const steps = ['limit_exhausted', 'busy'].includes(reason)
       ? [{ name: `implementation-${reason}`, conclusion: 'success' }]

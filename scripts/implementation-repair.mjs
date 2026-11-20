@@ -1,4 +1,4 @@
-﻿import { appendFile, readFile, writeFile, mkdir } from 'node:fs/promises'
+import { appendFile, readFile, writeFile, mkdir } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import config from '../.github/opencode/opencode.json' with { type: 'json' }
 import { unlink } from 'node:fs/promises'
@@ -18,7 +18,7 @@ import {
   validateExistingDocuments,
 } from './implementation-result.mjs'
 
-const repository = 'MeNn13/ai-for-developers-project-387'
+const repository = 'MeNn13/booking-calendar-opencode-v1-acceptance'
 const digest = (v) => createHash('sha256').update(JSON.stringify(v)).digest('hex')
 const check = (ok) => {
   if (!ok) throw new Error('repair_input')

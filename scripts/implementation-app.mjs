@@ -27,7 +27,7 @@ if (process.argv[2] === 'revoke') {
         Accept: 'application/vnd.github+json',
       },
       body: JSON.stringify({
-        repositories: ['ai-for-developers-project-387'],
+        repositories: ['booking-calendar-opencode-v1-acceptance'],
         permissions: { contents: 'write', pull_requests: 'write', issues: 'read', actions: 'read' },
       }),
     },

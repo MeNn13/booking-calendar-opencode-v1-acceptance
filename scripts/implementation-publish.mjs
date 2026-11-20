@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
 import { trustedOrigin } from './implementation-origin.mjs'
 
-const repository = 'MeNn13/ai-for-developers-project-387'
+const repository = 'MeNn13/booking-calendar-opencode-v1-acceptance'
 const shaPattern = /^[a-f0-9]{40}$/
 const positive = (n) => Number.isSafeInteger(n) && n > 0
 const digest = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex')

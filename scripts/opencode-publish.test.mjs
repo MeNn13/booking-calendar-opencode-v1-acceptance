@@ -167,7 +167,7 @@ test('workflow reports publication failures safely and keeps the run failed', as
       await execute(
         createRequire(import.meta.url),
         {
-          repo: { owner: 'MeNn13', repo: 'ai-for-developers-project-387' },
+          repo: { owner: 'MeNn13', repo: 'booking-calendar-opencode-v1-acceptance' },
           runId: 1,
           eventName: 'issue_comment',
           payload: { issue: { number: 9 }, comment: { id: 40 } },
@@ -252,7 +252,7 @@ test('failed preparation discovers publication markers with complete bounded his
         await execute(
           createRequire(import.meta.url),
           {
-            repo: { owner: 'MeNn13', repo: 'ai-for-developers-project-387' },
+            repo: { owner: 'MeNn13', repo: 'booking-calendar-opencode-v1-acceptance' },
             runId: 1,
             eventName: 'issue_comment',
             payload: { issue: { number: 9 }, comment: { id: 40 } },
@@ -346,7 +346,7 @@ const hasReason = (reason) => (error) => {
 const context = {
   number: 9,
   requestId: 40,
-  repository: 'MeNn13/ai-for-developers-project-387',
+  repository: 'MeNn13/booking-calendar-opencode-v1-acceptance',
   comments: [{ id: 40, user: { login: 'MeNn13', type: 'User' }, body: '/oc apply to-spec' }],
   related: [],
 }

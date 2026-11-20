@@ -1,4 +1,4 @@
-const repository = 'MeNn13/ai-for-developers-project-387'
+const repository = 'MeNn13/booking-calendar-opencode-v1-acceptance'
 const sha = /^[a-f0-9]{40}$/
 
 // Inline runs carry the PR merge revision despite checking out main in every job.

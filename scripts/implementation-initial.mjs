@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { pathToFileURL } from 'node:url'
 import { trustedHuman } from './opencode-publish.mjs'
 
-const repository = 'MeNn13/ai-for-developers-project-387'
+const repository = 'MeNn13/booking-calendar-opencode-v1-acceptance'
 const check = (ok, reason) => {
   if (!ok) throw new Error(reason)
 }
@@ -17,7 +17,7 @@ export async function initialContext(event, api, trust) {
     'initial_author',
   )
   const command = event.comment.body.match(
-    /^\s*\/(?:oc|opencode)\s+implement-spec\s+spec=#([1-9]\d*)\s+tickets=(#[1-9]\d*(?:,#[1-9]\d*)*)\s+(approve|approval=https:\/\/github\.com\/MeNn13\/ai-for-developers-project-387\/issues\/([1-9]\d*)#issuecomment-([1-9]\d*))\s*$/i,
+    /^\s*\/(?:oc|opencode)\s+implement-spec\s+spec=#([1-9]\d*)\s+tickets=(#[1-9]\d*(?:,#[1-9]\d*)*)\s+(approve|approval=https:\/\/github\.com\/MeNn13\/booking-calendar-opencode-v1-acceptance\/issues\/([1-9]\d*)#issuecomment-([1-9]\d*))\s*$/i,
   )
   check(
     command,

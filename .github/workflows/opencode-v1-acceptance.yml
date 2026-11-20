@@ -1,0 +1,38 @@
+name: OpenCode v1 acceptance
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: opencode-v1-preflight
+  cancel-in-progress: true
+
+jobs:
+  opencode:
+    if: github.repository == 'MeNn13/booking-calendar-opencode-v1-acceptance' && github.actor == 'MeNn13'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Verify pinned OpenCode CLI and GitHub command
+        run: |
+          curl --fail --silent --show-error --location \
+            https://github.com/anomalyco/opencode/releases/download/v1.19.5/opencode-linux-x64.tar.gz \
+            --output "$RUNNER_TEMP/opencode.tar.gz"
+          echo "588310a336fa3b9df36b3f0225b26f679d453efaad0cf3d66c3651ef3ec1647a  $RUNNER_TEMP/opencode.tar.gz" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/opencode-bin"
+          tar -xzf "$RUNNER_TEMP/opencode.tar.gz" -C "$RUNNER_TEMP/opencode-bin"
+          echo "$RUNNER_TEMP/opencode-bin" >> "$GITHUB_PATH"
+          cli="$RUNNER_TEMP/opencode-bin/opencode"
+          "$cli" --version
+          test "$("$cli" --version)" = '1.19.5'
+          "$cli" github run --help
+      - name: Check the free model
+        working-directory: ${{ runner.temp }}
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENCODE_DISABLE_AUTOUPDATE: 'true'
+        run: |
+          test -n "$OPENCODE_API_KEY"
+          opencode run --model opencode/deepseek-v4.1-flash-free "Reply with the single word OK."

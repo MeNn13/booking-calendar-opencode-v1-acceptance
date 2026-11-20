@@ -108,7 +108,7 @@ test('unknown preparation diagnostics preserve independently verified publicatio
 function event(body = '/oc explain this issue') {
   return {
     action: 'created',
-    repository: { full_name: 'MeNn13/ai-for-developers-project-387' },
+    repository: { full_name: 'MeNn13/booking-calendar-opencode-v1-acceptance' },
     issue: { number: 12 },
     comment: { id: 40, body, user: { login: 'MeNn13', type: 'User' } },
   }

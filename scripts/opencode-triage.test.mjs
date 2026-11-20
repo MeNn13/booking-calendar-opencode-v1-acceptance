@@ -15,7 +15,7 @@ const issue = {
 }
 const event = {
   action: 'opened',
-  repository: { full_name: 'MeNn13/ai-for-developers-project-387' },
+  repository: { full_name: 'MeNn13/booking-calendar-opencode-v1-acceptance' },
   issue,
 }
 

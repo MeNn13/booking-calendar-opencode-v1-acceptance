@@ -1,8 +1,8 @@
-﻿import assert from 'node:assert/strict'
+import assert from 'node:assert/strict'
 import test from 'node:test'
 import { admit } from './implementation-admission.mjs'
 
-const repo = 'MeNn13/ai-for-developers-project-387'
+const repo = 'MeNn13/booking-calendar-opencode-v1-acceptance'
 function fixture(prior = [], surface = 'issue_comment') {
   const event = {
     action: 'created',

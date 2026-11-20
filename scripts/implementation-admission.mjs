@@ -1,8 +1,8 @@
-﻿import { trustedHuman } from './opencode-publish.mjs'
+import { trustedHuman } from './opencode-publish.mjs'
 
 import { trustedOrigin } from './implementation-origin.mjs'
 
-const repository = 'MeNn13/ai-for-developers-project-387'
+const repository = 'MeNn13/booking-calendar-opencode-v1-acceptance'
 const workflows = ['.github/workflows/opencode.yml', '.github/workflows/implementation-publish.yml']
 const sha = /^[a-f0-9]{40}$/
 export async function admit(surface, event, api, trust) {

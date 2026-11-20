@@ -18,7 +18,7 @@ import { spawnSync, execFileSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import { initialCompletion } from './implementation-initial-completion.mjs'
 
-const repo = 'MeNn13/ai-for-developers-project-387'
+const repo = 'MeNn13/booking-calendar-opencode-v1-acceptance'
 const human = { login: 'MeNn13', type: 'User' }
 const event = {
   action: 'created',
@@ -105,7 +105,7 @@ test('missing consent, unavailable requirements and cyclic or incomplete native 
     ...event,
     comment: {
       ...event.comment,
-      body: '/oc implement-spec spec=#2 tickets=#3,#4 approval=https://github.com/MeNn13/ai-for-developers-project-387/issues/1#issuecomment-10',
+      body: '/oc implement-spec spec=#2 tickets=#3,#4 approval=https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/issues/1#issuecomment-10',
     },
   }
   assert.equal((await initialContext(old, api, trust)).approval, 10)

@@ -77,7 +77,7 @@ function fixture() {
         path: '.github/workflows/opencode-implement.yml',
         head_sha: sha,
         head_branch: 'main',
-        repository: { full_name: 'MeNn13/ai-for-developers-project-387' },
+        repository: { full_name: 'MeNn13/booking-calendar-opencode-v1-acceptance' },
         conclusion: 'success',
         run_attempt: 1,
       }
@@ -94,7 +94,8 @@ function fixture() {
         user: { login: 'MeNn13', type: 'User' },
         author_association: 'OWNER',
         body: 'Согласовано #38 #40',
-        issue_url: 'https://api.github.com/repos/MeNn13/ai-for-developers-project-387/issues/12',
+        issue_url:
+          'https://api.github.com/repos/MeNn13/booking-calendar-opencode-v1-acceptance/issues/12',
       }
     if (path.startsWith('/git/ref/heads/')) return head ? { object: { sha: head } } : null
     if (path.startsWith('/pulls?')) return pr ? [pr] : []
@@ -361,7 +362,7 @@ test('partial publication records receipt and retry finishes PR without duplicat
         path: '.github/workflows/implementation-publish.yml',
         head_branch: 'main',
         head_sha: sha,
-        repository: { full_name: 'MeNn13/ai-for-developers-project-387' },
+        repository: { full_name: 'MeNn13/booking-calendar-opencode-v1-acceptance' },
       }
     return f.api(method, path, data)
   }
@@ -478,7 +479,7 @@ test('existing App branch accepts a checked successor and marks confirmed PR rea
         path: '.github/workflows/implementation-publish.yml',
         head_branch: 'main',
         head_sha: sha,
-        repository: { full_name: 'MeNn13/ai-for-developers-project-387' },
+        repository: { full_name: 'MeNn13/booking-calendar-opencode-v1-acceptance' },
       }
     if (path === `/git/commits/${next}`) return { tree: { sha } }
     if (path === '/git/commits') return { sha: updated.candidateSha }
@@ -513,7 +514,7 @@ test('App authentication requests only the fixed repository and permissions; rev
         assert.equal(options.headers.Authorization, 'Bearer fixture-token');
       } else {
         assert.equal(url, 'https://api.github.com/app/installations/20/access_tokens');
-        assert.deepEqual(JSON.parse(options.body), { repositories: ['ai-for-developers-project-387'], permissions: { contents: 'write', pull_requests: 'write', issues: 'read', actions: 'read' } });
+        assert.deepEqual(JSON.parse(options.body), { repositories: ['booking-calendar-opencode-v1-acceptance'], permissions: { contents: 'write', pull_requests: 'write', issues: 'read', actions: 'read' } });
         assert.match(options.headers.Authorization, /^Bearer [^.]+\\.[^.]+\\.[^.]+$/);
       }
       return { ok: true, json: async () => ({ token: 'fixture-token' }) };
@@ -557,7 +558,7 @@ test('verified ready false converts an existing ready PR back to draft', async (
         path: '.github/workflows/implementation-publish.yml',
         head_branch: 'main',
         head_sha: sha,
-        repository: { full_name: 'MeNn13/ai-for-developers-project-387' },
+        repository: { full_name: 'MeNn13/booking-calendar-opencode-v1-acceptance' },
       }
     if (path === '/graphql') {
       mutations.push(data)
@@ -610,7 +611,7 @@ test('publisher accepts inline origin and prior inline receipt but rejects chang
         event: 'pull_request_review_comment',
         head_branch: 'spec/38',
         head_sha: 'd'.repeat(40),
-        repository: { full_name: 'MeNn13/ai-for-developers-project-387' },
+        repository: { full_name: 'MeNn13/booking-calendar-opencode-v1-acceptance' },
         status: 'in_progress',
       }
     if (path.startsWith('/git/commits/' + 'd'.repeat(40)))
@@ -678,7 +679,7 @@ test('publisher-only rerun recovers the current run checkpoint after branch writ
         path: '.github/workflows/implementation-publish.yml',
         head_sha: sha,
         head_branch: 'main',
-        repository: { full_name: 'MeNn13/ai-for-developers-project-387' },
+        repository: { full_name: 'MeNn13/booking-calendar-opencode-v1-acceptance' },
       }
     if (path.includes('/attempts/'))
       return {

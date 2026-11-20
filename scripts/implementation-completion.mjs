@@ -1,5 +1,5 @@
 import { trustedOrigin } from './implementation-origin.mjs'
-const repository = 'MeNn13/ai-for-developers-project-387'
+const repository = 'MeNn13/booking-calendar-opencode-v1-acceptance'
 export async function completion(run, api, appId, trustedSha = 'main') {
   if (
     run.path !== '.github/workflows/opencode.yml' ||
