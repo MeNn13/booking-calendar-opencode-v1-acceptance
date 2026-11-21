@@ -261,15 +261,25 @@ test('initial in-progress producer publishes first draft and requires final chec
   await publishImplementation(ready, finished, github, finalTrust)
   assert.equal(readyCalls.length, 1)
   assert.match(readyCalls[0].query, /markPullRequestReadyForReview/)
-  await assert.rejects(
-    publishImplementation(
-      { ...draft, contextDigest: digest({ ...initial, deadline: 0 }) },
-      { ...initial, deadline: 0 },
-      github,
-      trusted,
-    ),
-    /context/,
-  )
+})
+
+test('initial publisher reports deadline and rerun refusals before any writes', async () => {
+  for (const [deadline, runAttempt, reason] of [
+    [0, 1, 'initial_timeout'],
+    [Number.MAX_SAFE_INTEGER, 2, 'initial_rerun'],
+  ]) {
+    const initial = { ...context, initial: true, phase: 'first', deadline }
+    const calls = []
+    const api = async (method, path) => {
+      calls.push({ method, path })
+      return { run_attempt: runAttempt }
+    }
+    await assert.rejects(publishImplementation(result, initial, api, trust()), {
+      message: reason,
+      state: 'none',
+    })
+    assert.deepEqual(calls, [{ method: 'GET', path: '/actions/runs/7' }])
+  }
 })
 
 test('rejects protected files, deletion, rename targets, symlinks and path bypass before writes', async () => {

@@ -55,6 +55,7 @@ test('explicit current consent binds the native ticket graph and immutable snaps
   const result = await initialContext(event, api, trust)
   assert.equal(result.approval, 10)
   assert.equal(result.source, 1)
+  assert.match(result.commitDate, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
   assert.deepEqual(result.graph, [
     { number: 3, blockedBy: [] },
     { number: 4, blockedBy: [3] },
