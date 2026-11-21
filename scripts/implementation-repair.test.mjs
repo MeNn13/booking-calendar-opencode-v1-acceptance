@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync, execFileSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
-import { validateRepair, recoveryArtifact } from './implementation-repair.mjs'
+import { validateRepair, recoveryArtifact, repairContext } from './implementation-repair.mjs'
 import { completion } from './implementation-completion.mjs'
 
 const reply = {
@@ -15,6 +15,63 @@ const reply = {
   risk: 'UI behavior',
   rollback: 'Revert commit',
 }
+
+test('repair context supplies the UTC timestamp required by the publisher', async () => {
+  const repository = 'MeNn13/booking-calendar-opencode-v1-acceptance'
+  const trustedSha = 'a'.repeat(40)
+  const head = { sha: 'b'.repeat(40), repo: { full_name: repository } }
+  const human = { login: 'MeNn13', type: 'User' }
+  const original = {
+    source: 1,
+    spec: 2,
+    tickets: [3],
+    snapshots: [{ number: 3, body: 'Requirements' }],
+    approval: 4,
+    approvalBody: 'Approved requirements',
+  }
+  const previous = {
+    version: 1,
+    appId: 5,
+    pr: 6,
+    branch: 'spec/2',
+    head: head.sha,
+    publisherRunId: 7,
+  }
+  const event = {
+    action: 'created',
+    repository: { full_name: repository },
+    issue: { number: previous.pr, pull_request: {} },
+    comment: { id: 8, body: '/oc fix 7 complete #3', user: human, author_association: 'OWNER' },
+  }
+  const responses = {
+    '/pulls/6': { number: 6, head, base: { sha: trustedSha }, user: { id: previous.appId } },
+    '/actions/runs/7': {
+      path: '.github/workflows/opencode-implement.yml',
+      event: 'workflow_dispatch',
+      head_branch: 'main',
+      head_sha: trustedSha,
+      repository: { full_name: repository },
+    },
+    '/issues/3': original.snapshots[0],
+    '/issues/6': { title: 'Draft PR' },
+    '/issues/6/comments?per_page=100&page=1': [],
+    '/issues/comments/4': {
+      body: original.approvalBody,
+      issue_url: `https://api.github.com/repos/${repository}/issues/1`,
+      user: human,
+      author_association: 'OWNER',
+    },
+  }
+  const { context } = await repairContext(
+    'issue_comment',
+    event,
+    previous,
+    original,
+    async (path, accept) => (accept === 'application/vnd.github.diff' ? '' : responses[path]),
+    { appId: previous.appId, runId: 9, trustedSha },
+  )
+  assert.match(context.commitDate, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
+})
 
 test('a skipped candidate verification does not request publisher approval', () => {
   const workflow = readFileSync(

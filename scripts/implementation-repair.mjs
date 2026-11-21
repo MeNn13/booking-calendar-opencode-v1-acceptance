@@ -82,7 +82,7 @@ export async function repairContext(eventName, event, previous, original, github
     trustedSha: trust.trustedSha,
     base: trust.trustedSha,
     expectedHead: pr.head.sha,
-    commitDate: new Date().toISOString().replace(/\.\d{3}Z$/, ''),
+    commitDate: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
     repair: { number: pr.number, eventName, event, previousRunId: previous.publisherRunId },
   }
   return {
