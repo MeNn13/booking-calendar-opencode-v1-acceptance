@@ -2,19 +2,48 @@ name: OpenCode v1 acceptance
 
 on:
   workflow_dispatch:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
 
 permissions: {}
 
 concurrency:
-  group: opencode-v1-preflight
-  cancel-in-progress: true
+  group: opencode-v1-${{ github.event.issue.number || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
 
 jobs:
   opencode:
-    if: github.repository == 'MeNn13/booking-calendar-opencode-v1-acceptance' && github.actor == 'MeNn13'
+    if: >-
+      github.repository == 'MeNn13/booking-calendar-opencode-v1-acceptance' &&
+      github.actor == 'MeNn13' &&
+      (github.event_name == 'workflow_dispatch' ||
+       ((startsWith(github.event.comment.body, '/oc ') ||
+         startsWith(github.event.comment.body, '/opencode ')) &&
+        (github.event_name != 'pull_request_review_comment' ||
+         github.event.pull_request.head.repo.full_name == github.repository)))
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+      issues: read
+      pull-requests: read
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Reject PRs from other repositories
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          head_repo="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq .head.repo.full_name)"
+          test "$head_repo" = "$GITHUB_REPOSITORY"
       - name: Verify pinned OpenCode CLI and GitHub command
         run: |
           curl --fail --silent --show-error --location \
@@ -29,6 +58,7 @@ jobs:
           test "$("$cli" --version)" = '1.19.5'
           "$cli" github run --help
       - name: Check the free model
+        if: github.event_name == 'workflow_dispatch'
         working-directory: ${{ runner.temp }}
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
@@ -36,3 +66,11 @@ jobs:
         run: |
           test -n "$OPENCODE_API_KEY"
           opencode run --model opencode/deepseek-v4.1-flash-free "Reply with the single word OK."
+      - name: Run the official GitHub agent
+        if: github.event_name != 'workflow_dispatch'
+        env:
+          MODEL: opencode/deepseek-v4.1-flash-free
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENCODE_DISABLE_AUTOUPDATE: 'true'
+          SHARE: 'false'
+        run: opencode github run

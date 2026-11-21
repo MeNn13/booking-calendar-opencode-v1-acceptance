@@ -20,6 +20,13 @@ ignores:
       fork PRs are rejected, only default-branch code runs, and GitHub write
       permissions are isolated from the model in a separate job.
     expires: '2027-01-31'
+  - rule: dangerous-triggers
+    file: .github/workflows/opencode-v1-acceptance.yml
+    reason: >-
+      Owner approved a temporary OpenCode v1 acceptance run in the private test
+      repository. Only the owner may invoke the agent, with a same-repository
+      check on both PR comment paths and checkout of the default branch.
+    expires: '2026-11-27'
   - rule: artipacked
     uses: actions/checkout
     file: .github/workflows/hexlet-check.yml
