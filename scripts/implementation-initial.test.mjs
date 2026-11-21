@@ -51,6 +51,26 @@ function api(path) {
     }
   throw new Error('unavailable')
 }
+test('initial worktrees use local objects and keep fetch credentials out of preparation', () => {
+  const workflow = readFileSync(
+    new URL('../.github/workflows/opencode-implement.yml', import.meta.url),
+    'utf8',
+  )
+  const steps = workflow.split(/\n      - /)
+  const preparations = steps.filter((step) =>
+    step.startsWith('name: Prepare isolated candidate worktree'),
+  )
+  assert.equal(preparations.length, 2)
+  for (const step of preparations) {
+    assert.match(step, /git worktree add --detach/)
+    assert.doesNotMatch(step, /git fetch|GH_TOKEN/)
+  }
+  const fetches = steps.filter((step) => step.includes('git fetch'))
+  assert.equal(fetches.length, 1)
+  assert.match(fetches[0], /GH_TOKEN: \$\{\{ github\.token \}\}/)
+  assert.match(fetches[0], /if ! git cat-file -e "\$head\^\{commit\}"; then/)
+})
+
 test('explicit current consent binds the native ticket graph and immutable snapshots', async () => {
   const result = await initialContext(event, api, trust)
   assert.equal(result.approval, 10)

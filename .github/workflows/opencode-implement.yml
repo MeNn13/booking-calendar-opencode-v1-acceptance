@@ -99,7 +99,6 @@ jobs:
         shell: bash
         run: |
           head=$(node -p 'JSON.parse(require("fs").readFileSync(process.env.INITIAL_IO+"/context.json")).expectedHead')
-          git fetch origin "$head"
           git worktree add --detach "$INITIAL_CANDIDATE_ROOT" "$head"
           mise trust "$INITIAL_CANDIDATE_ROOT/mise.toml"
           cd "$INITIAL_CANDIDATE_ROOT"
@@ -251,13 +250,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TRUSTED_SHA: ${{ needs.context.outputs.sha }}
+      - name: Fetch published parent when missing
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          head=$(node -p 'JSON.parse(require("fs").readFileSync(process.env.INITIAL_IO+"/context.json")).expectedHead')
+          if ! git cat-file -e "$head^{commit}"; then
+            auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+            echo "::add-mask::$auth"
+            GIT_CONFIG_COUNT=1 \
+              GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+              GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth" \
+              git fetch origin "$head"
+          fi
       - name: Install pinned toolchain
         uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d
       - name: Prepare isolated candidate worktree
         shell: bash
         run: |
           head=$(node -p 'JSON.parse(require("fs").readFileSync(process.env.INITIAL_IO+"/context.json")).expectedHead')
-          git fetch origin "$head"
           git worktree add --detach "$INITIAL_CANDIDATE_ROOT" "$head"
           mise trust "$INITIAL_CANDIDATE_ROOT/mise.toml"
           cd "$INITIAL_CANDIDATE_ROOT"
