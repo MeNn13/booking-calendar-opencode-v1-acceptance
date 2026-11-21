@@ -144,6 +144,10 @@ test('prepared implementation creates an App draft PR without executing result c
   const receipt = await publishImplementation(result, context, f.api, trust())
   assert.equal(receipt.head, next)
   assert.equal(receipt.pr, 50)
+  assert.equal(
+    f.calls.find((c) => c.path === '/git/commits' && c.method === 'POST').data.message,
+    result.message + '\n',
+  )
   assert.equal(f.calls.find((c) => c.path === '/git/refs').data.ref, 'refs/heads/spec/38')
   assert.match(
     f.calls.find((c) => c.path === '/pulls' && c.method === 'POST').data.body,
