@@ -160,6 +160,13 @@ test('repair model has no write token and emits only the validated change object
     `import assert from 'node:assert/strict'
     assert.equal(process.env.GH_TOKEN, undefined)
     assert.equal(process.env.PUBLISH_APP_PRIVATE_KEY, undefined)
+    if (process.env.FAKE_PROVIDER_ERROR === '1') {
+      console.error('private stderr')
+      console.log(JSON.stringify({type: 'error', error: {
+        name: 'APIError', status: 429, message: 'private provider response',
+      }}))
+      process.exit(1)
+    }
     const emit = (type, messageID, part) => console.log(JSON.stringify({
       type, timestamp: 1, sessionID: 'ses_repair',
       part: { sessionID: 'ses_repair', messageID, ...part },
@@ -181,25 +188,37 @@ test('repair model has no write token and emits only the validated change object
     preload,
     `import cp from 'node:child_process'; import {syncBuiltinESMExports} from 'node:module'; const original=cp.spawnSync; cp.spawnSync=(bin,args,opts)=>original(process.execPath,[${JSON.stringify(cli)}],opts); syncBuiltinESMExports();`,
   )
-  const result = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      pathToFileURL(preload).href,
-      join(import.meta.dirname, 'implementation-repair.mjs'),
-      'model',
-    ],
-    {
-      env: {
-        ...process.env,
-        REPAIR_IO: dir,
-        OPENCODE_API_KEY: 'fake',
-        GH_TOKEN: 'write-token',
-        PUBLISH_APP_PRIVATE_KEY: 'key',
+  const runModel = (fakeProviderError) =>
+    spawnSync(
+      process.execPath,
+      [
+        '--import',
+        pathToFileURL(preload).href,
+        join(import.meta.dirname, 'implementation-repair.mjs'),
+        'model',
+      ],
+      {
+        env: {
+          ...process.env,
+          REPAIR_IO: dir,
+          OPENCODE_API_KEY: 'fake',
+          GH_TOKEN: 'write-token',
+          PUBLISH_APP_PRIVATE_KEY: 'key',
+          FAKE_PROVIDER_ERROR: fakeProviderError,
+          GITHUB_ACTIONS: 'true',
+          GITHUB_STEP_SUMMARY: join(dir, 'summary.md'),
+        },
+        encoding: 'utf8',
       },
-      encoding: 'utf8',
-    },
-  )
+    )
+  const failed = runModel('1')
+  const diagnostic = 'repair_failed phase=model operation=model category=provider_error status=429'
+  assert.equal(failed.status, 1)
+  assert.equal(failed.stdout, '')
+  assert.equal(failed.stderr.trim(), `::error::${diagnostic}`)
+  assert.equal(readFileSync(join(dir, 'summary.md'), 'utf8'), diagnostic + '\n')
+  assert.throws(() => readFileSync(join(dir, 'reply.json')), { code: 'ENOENT' })
+  const result = runModel('0')
   assert.equal(result.status, 0, result.stderr)
   const decoded = JSON.parse(readFileSync(join(dir, 'reply.json')))
   assert.deepEqual(decoded, reply)

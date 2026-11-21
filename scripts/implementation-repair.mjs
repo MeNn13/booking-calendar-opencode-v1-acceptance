@@ -9,7 +9,7 @@ import { admit } from './implementation-admission.mjs'
 import { allowedFile, allowedPath, existingDocument } from './implementation-publish.mjs'
 import { prepare } from './opencode.mjs'
 import { trustedOrigin } from './implementation-origin.mjs'
-import { decodeModel } from './implementation-model-output.mjs'
+import { decodeModel, ImplementationFailure } from './implementation-model-output.mjs'
 import {
   generated,
   InvalidResult,
@@ -322,8 +322,14 @@ async function main() {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
   main().catch(async (error) => {
     const phase = process.argv[2]
-    if (error instanceof InvalidResult && ['model', 'candidate'].includes(phase)) {
-      const diagnostic = `repair_failed phase=${phase} operation=validate category=invalid_result ${error.message}`
+    let diagnostic
+    if (phase === 'model' && error instanceof ImplementationFailure) {
+      const status = error.status === undefined ? '' : ` status=${error.status}`
+      diagnostic = `repair_failed phase=model operation=model category=${error.message}${status}`
+    } else if (error instanceof InvalidResult && ['model', 'candidate'].includes(phase)) {
+      diagnostic = `repair_failed phase=${phase} operation=validate category=invalid_result ${error.message}`
+    }
+    if (diagnostic) {
       console.error(process.env.GITHUB_ACTIONS ? `::error::${diagnostic}` : diagnostic)
       if (process.env.GITHUB_STEP_SUMMARY)
         await appendFile(process.env.GITHUB_STEP_SUMMARY, diagnostic + '\n').catch(() =>
