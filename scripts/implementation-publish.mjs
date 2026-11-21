@@ -305,7 +305,7 @@ export async function publishImplementation(
       date: context.commitDate,
     }
     const commit = await api('POST', '/git/commits', {
-      message: result.message,
+      message: result.message + '\n',
       tree: tree.sha,
       parents: [parent],
       author: identity,
