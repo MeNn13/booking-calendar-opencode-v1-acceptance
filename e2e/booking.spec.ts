@@ -82,10 +82,12 @@ test('mobile guest keeps selected time and booking controls in view', async ({ p
   await page.getByRole('button', { name: 'Повторить', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Встреча забронирована' })).toBeVisible()
   await expect(page.getByText('Mobile Guest', { exact: true })).toBeVisible()
+  await expect(page.getByText('Длительность: 30 мин', { exact: true })).toBeVisible()
   await expect(page.getByText(/\(МСК\)$/)).toContainText(time)
   await expect(page.getByText(/\(МСК\)$/)).toContainText(day.replace(/\s+\d{4}$/, ''))
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.getByRole('button', { name: 'Записаться ещё', exact: true }).click()
+  await expect(page.getByText(/^Длительность:/)).toHaveCount(0)
   await page.getByRole('button', { name: /Mobile consultation/ }).click()
   await selectLastWorkingDay(page)
   const occupied = page.getByRole('button', { name: `${time} занято`, exact: true })
@@ -101,6 +103,7 @@ test('mobile guest keeps selected time and booking controls in view', async ({ p
   await page.getByLabel('Ваше имя').fill(longName)
   await page.getByRole('button', { name: 'Продолжить', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Встреча забронирована' })).toBeVisible()
+  await expect(page.getByText('Длительность: 30 мин', { exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.goto('/owner')
   const meeting = page.getByRole('article').filter({ hasText: 'Mobile Guest' })
@@ -181,6 +184,7 @@ test('guest recovers from an overlapping booking in another tab', async ({ page,
 
   await page.getByRole('button', { name: 'Продолжить', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Встреча забронирована' })).toBeVisible()
+  await expect(page.getByText('Длительность: 60 мин', { exact: true })).toBeVisible()
   await expect(page.getByText(/\(МСК\)$/)).toContainText(longTime)
 
   const conflictResponse = other.waitForResponse(
@@ -192,6 +196,8 @@ test('guest recovers from an overlapping booking in another tab', async ({ page,
   expect(conflict.status()).toBe(409)
   expect(await conflict.json()).toMatchObject({ type: 'slot-taken' })
   await expect(other.getByText('Это время только что заняли. Выберите другое время.')).toBeVisible()
+  await expect(other.getByText('Встреча забронирована')).toHaveCount(0)
+  await expect(other.getByText(/^Длительность:/)).toHaveCount(0)
   await expect(other.getByRole('status', { name: 'Загрузка слотов' })).toHaveCount(0)
   await expect(
     other.getByRole('button', { name: `${staleTime} занято`, exact: true }),
@@ -207,6 +213,7 @@ test('guest recovers from an overlapping booking in another tab', async ({ page,
   await expect(other.getByRole('heading', { name: 'Встреча забронирована' })).toBeVisible()
   await expect(other.getByText('Short browser meeting', { exact: true })).toBeVisible()
   await expect(other.getByText('Retrying Guest', { exact: true })).toBeVisible()
+  await expect(other.getByText('Длительность: 30 мин', { exact: true })).toBeVisible()
   const confirmation = other.getByText(/\(МСК\)$/)
   await expect(confirmation).toContainText(retryTime)
   await expect(confirmation).toContainText(day.replace(/\s+\d{4}$/, ''))
@@ -281,12 +288,15 @@ test('mobile guest reads an overlap refusal and can recover', async ({ page, con
   }
   await page.getByRole('button', { name: 'Продолжить', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Встреча забронирована' })).toBeVisible()
+  await expect(page.getByText('Длительность: 30 мин', { exact: true })).toBeVisible()
   const response = other.waitForResponse(
     (reply) => reply.url().endsWith('/api/meetings') && reply.request().method() === 'POST',
   )
   await other.getByRole('button', { name: 'Продолжить', exact: true }).click()
   expect((await response).status()).toBe(409)
   const refusal = other.getByText('Это время только что заняли. Выберите другое время.')
+  await expect(other.getByText('Встреча забронирована')).toHaveCount(0)
+  await expect(other.getByText(/^Длительность:/)).toHaveCount(0)
   await refusal.scrollIntoViewIfNeeded()
   await expect(refusal).toBeInViewport({ ratio: 1 })
   expect(await refusal.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
@@ -299,6 +309,8 @@ test('mobile guest reads an overlap refusal and can recover', async ({ page, con
   await expect(refusal).toHaveCount(0)
   await other.getByRole('button', { name: 'Продолжить', exact: true }).click()
   await expect(other.getByRole('heading', { name: 'Встреча забронирована' })).toBeVisible()
+  await expect(other.getByText('Длительность: 30 мин', { exact: true })).toBeVisible()
+  expect(await other.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
 test('mobile guest reads an exhausted booking window', async ({ page }) => {
