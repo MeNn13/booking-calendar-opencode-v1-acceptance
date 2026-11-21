@@ -23,7 +23,7 @@ ignores:
   - rule: dangerous-triggers
     file: .github/workflows/opencode-v1-acceptance.yml
     reason: >-
-      Owner approved a temporary OpenCode v1 acceptance run in the private test
+      Owner approved a temporary OpenCode v1 acceptance run in the public test
       repository. Only the owner may invoke the agent, with a same-repository
       check on both PR comment paths and checkout of the default branch.
     expires: '2026-11-27'
