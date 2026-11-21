@@ -430,6 +430,8 @@ jobs:
       actions: read
       issues: read
       pull-requests: read
+    outputs:
+      verified: ${{ steps.verify.outcome }}
     env:
       TRUSTED_SHA: ${{ needs.context.outputs.commit }}
       PUBLISH_APP_BOT_ID: ${{ vars.PUBLISH_APP_BOT_ID }}
@@ -494,6 +496,7 @@ jobs:
         run: node scripts/implementation-sandbox.mjs
       - name: Record successful exact SHA verification
         if: steps.gate.outputs.allowed == 'true'
+        id: verify
         run: node scripts/implementation-repair.mjs verify
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: steps.gate.outputs.allowed == 'true'
@@ -513,7 +516,7 @@ jobs:
   implementation-publish:
     name: implementation-publish-pr-${{ github.event.issue.number || github.event.pull_request.number }}
     needs: [context, implementation-context, implementation-check]
-    if: needs.implementation-check.result == 'success'
+    if: needs.implementation-check.outputs.verified == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     concurrency:

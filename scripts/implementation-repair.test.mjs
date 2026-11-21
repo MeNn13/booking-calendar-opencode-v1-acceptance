@@ -16,6 +16,22 @@ const reply = {
   rollback: 'Revert commit',
 }
 
+test('a skipped candidate verification does not request publisher approval', () => {
+  const workflow = readFileSync(
+    new URL('../.github/workflows/opencode.yml', import.meta.url),
+    'utf8',
+  )
+  const checkStart = workflow.indexOf('\n  implementation-check:')
+  const publisherStart = workflow.indexOf('\n  implementation-publish:', checkStart)
+  const check = workflow.slice(checkStart, publisherStart)
+  const publisher = workflow.slice(publisherStart)
+
+  assert.match(check, /verified: \$\{\{ steps\.verify\.outcome \}\}/)
+  assert.match(check, /id: verify\s+run: node scripts\/implementation-repair\.mjs verify/)
+  assert.match(publisher, /if: needs\.implementation-check\.outputs\.verified == 'success'/)
+  assert.match(publisher, /run: node scripts\/implementation-repair\.mjs gate/)
+})
+
 test('full and publisher-only reruns replace run-scoped artifacts without wildcard downloads', () => {
   for (const workflow of ['opencode.yml', 'implementation-publish.yml']) {
     const source = readFileSync(
