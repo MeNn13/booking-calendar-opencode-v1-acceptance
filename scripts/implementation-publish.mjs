@@ -53,11 +53,13 @@ export async function publishImplementation(
       'trust',
     )
     const run = await api('GET', `/actions/runs/${trust.runId}`)
-    if (context.initial && !context.repair)
+    if (context.initial && !context.repair) {
       requireValue(
-        Number.isFinite(context.deadline) && Date.now() < context.deadline && run.run_attempt === 1,
-        'context',
+        Number.isFinite(context.deadline) && Date.now() < context.deadline,
+        'initial_timeout',
       )
+      requireValue(run.run_attempt === 1, 'initial_rerun')
+    }
     requireValue(
       run.id === trust.runId &&
         ['.github/workflows/opencode-implement.yml', '.github/workflows/opencode.yml'].includes(
@@ -374,6 +376,8 @@ export async function publishImplementation(
       'origin',
       'checks',
       'context',
+      'initial_timeout',
+      'initial_rerun',
       'result',
       'verification',
       'approval',

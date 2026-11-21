@@ -107,7 +107,7 @@ export async function initialContext(event, api, trust) {
     trustedSha: trust.trustedSha,
     base: trust.trustedSha,
     expectedHead: trust.trustedSha,
-    commitDate: new Date().toISOString().replace(/\.\d{3}Z$/, ''),
+    commitDate: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
     source,
     spec,
     tickets,
