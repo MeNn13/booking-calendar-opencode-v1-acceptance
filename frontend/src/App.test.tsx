@@ -33,7 +33,7 @@ describe('main page', () => {
         'Календарь звонков — сервис бронирования встреч без регистрации. Свободные слоты видны сразу: занятый слот исчезает из списка.',
       ),
     ).toBeVisible()
-    expect(screen.getByRole('heading', { level: 2, name: 'Возможности' })).toBeVisible()
+    expect(screen.getByRole('heading', { level: 2, name: 'Возможности календаря' })).toBeVisible()
     expect(screen.getByText('Выбрать тип встречи и её длительность')).toBeVisible()
     expect(
       screen.getByText(

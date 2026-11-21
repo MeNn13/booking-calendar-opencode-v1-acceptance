@@ -23,7 +23,7 @@ export function HomePage() {
 
         <div>
           <Title order={2} mb="md">
-            Возможности
+            Возможности календаря
           </Title>
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
             {capabilities.map((capability) => (
