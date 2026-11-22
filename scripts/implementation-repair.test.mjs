@@ -89,6 +89,24 @@ test('a skipped candidate verification does not request publisher approval', () 
   assert.match(publisher, /run: node scripts\/implementation-repair\.mjs gate/)
 })
 
+test('workflow requires admission before recording the marker or running the model', () => {
+  const workflow = readFileSync(
+    new URL('../.github/workflows/opencode.yml', import.meta.url),
+    'utf8',
+  )
+  const model = workflow.slice(
+    workflow.indexOf('\n  implementation-model:'),
+    workflow.indexOf('\n  implementation-check:'),
+  )
+  assert.match(model, /if: needs\.implementation-context\.result == 'success'/)
+  assert.match(model, /id: gate\s+run: node scripts\/implementation-repair\.mjs gate/)
+  assert.match(model, /name: implementation-admitted\s+if: steps\.gate\.outputs\.allowed == 'true'/)
+  assert.match(
+    model,
+    /if: steps\.gate\.outputs\.allowed == 'true'\s+run: node scripts\/implementation-repair\.mjs model/,
+  )
+})
+
 test('full and publisher-only reruns replace run-scoped artifacts without wildcard downloads', () => {
   for (const workflow of ['opencode.yml', 'implementation-publish.yml']) {
     const source = readFileSync(

@@ -5,7 +5,7 @@ import { unlink } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { createHash } from 'node:crypto'
 import { pathToFileURL } from 'node:url'
-import { admit } from './implementation-admission.mjs'
+import { admit, AdmissionFailure } from './implementation-admission.mjs'
 import { allowedFile, allowedPath, existingDocument } from './implementation-publish.mjs'
 import { prepare } from './opencode.mjs'
 import { trustedOrigin } from './implementation-origin.mjs'
@@ -174,15 +174,13 @@ async function main() {
       appId: Number(process.env.PUBLISH_APP_BOT_ID),
       trustedSha: process.env.TRUSTED_SHA,
     })
-    await appendFile(
-      process.env.GITHUB_OUTPUT,
-      `allowed=${decision.allowed}\nreason=${decision.reason}\n`,
-    )
+    let output = `allowed=${decision.allowed}\nreason=${decision.reason}\n`
     if (decision.allowed) {
       const match = event.comment.body.match(/^\s*\/(?:oc|opencode)\s+fix\s+([1-9]\d*)\b/i)
       check(match && Number.isSafeInteger(Number(match[1])))
-      await appendFile(process.env.GITHUB_OUTPUT, `previous=${match[1]}\nhead=${decision.head}\n`)
+      output += `previous=${match[1]}\nhead=${decision.head}\n`
     }
+    await appendFile(process.env.GITHUB_OUTPUT, output)
   } else if (command === 'recovery') {
     const artifact = await recoveryArtifact(api, Number(process.env.GITHUB_RUN_ID))
     if (artifact) await appendFile(process.env.GITHUB_OUTPUT, `artifact=${artifact}\n`)
@@ -323,7 +321,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
   main().catch(async (error) => {
     const phase = process.argv[2]
     let diagnostic
-    if (phase === 'model' && error instanceof ImplementationFailure) {
+    if (phase === 'gate') {
+      const category = error instanceof AdmissionFailure ? error.message : 'gate_error'
+      const rawAttempt = Number(process.env.GITHUB_RUN_ATTEMPT)
+      const rawSha = process.env.GITHUB_SHA
+      const attempt = Number.isSafeInteger(rawAttempt) && rawAttempt > 0 ? rawAttempt : 'unknown'
+      const sha = rawSha?.length === 40 && /^[a-f0-9]{40}$/.test(rawSha) ? rawSha : 'unknown'
+      diagnostic = `repair_failed phase=gate operation=admit category=${category} attempt=${attempt} sha=${sha}`
+    } else if (phase === 'model' && error instanceof ImplementationFailure) {
       const status = error.status === undefined ? '' : ` status=${error.status}`
       diagnostic = `repair_failed phase=model operation=model category=${error.message}${status}`
     } else if (error instanceof InvalidResult && ['model', 'candidate'].includes(phase)) {
