@@ -107,6 +107,45 @@ test('inline merge-ref runs are trusted by workflow identity, including shared h
       : api(path)
   await assert.rejects(admit('pull_request_review_comment', f.event, forged, f.trust), /history/)
 })
+
+test('inline PR head runs share the budget only with a trusted workflow and PR association', async () => {
+  const surface = 'pull_request_review_comment'
+  const head = 'b'.repeat(40)
+  const base = 'e'.repeat(40)
+  const repoUrl = `https://api.github.com/repos/${repo}`
+  const association = {
+    number: 50,
+    head: { sha: head, ref: 'spec/38', repo: { url: repoUrl } },
+    base: { sha: base, ref: 'main', repo: { url: repoUrl } },
+  }
+  const prior = { id: 1, event: 'issue_comment', head_branch: 'main', head_sha: base }
+  const f = fixture([prior, { ...prior, id: 2 }], surface)
+  const api = async (path) => {
+    if (path === `/git/commits/${head}`) return { parents: [{ sha: 'd'.repeat(40) }] }
+    if (path === '/actions/runs/100')
+      return { ...(await f.api(path)), pull_requests: [association] }
+    return f.api(path)
+  }
+  assert.equal((await admit(surface, f.event, api, f.trust)).reason, 'admitted')
+
+  const afterThird = async (path) => {
+    if (!path.startsWith('/actions/runs?')) return api(path)
+    const history = await f.api(path)
+    const third = { ...(await api('/actions/runs/100')), id: 3 }
+    return { total_count: 3, workflow_runs: [...history.workflow_runs, third] }
+  }
+  assert.equal((await admit(surface, f.event, afterThird, f.trust)).reason, 'limit_exhausted')
+
+  for (const [path, response] of [
+    ['/actions/runs/100', { ...(await api('/actions/runs/100')), pull_requests: [] }],
+    [`/compare/${base}...${head}`, { status: 'diverged' }],
+    [`/compare/${base}...${f.trust.trustedSha}`, { status: 'behind' }],
+    [`/contents/.github/workflows/opencode.yml?ref=${head}`, { sha: 'f'.repeat(40) }],
+  ]) {
+    const invalid = (request) => (request === path ? response : api(request))
+    await assert.rejects(admit(surface, f.event, invalid, f.trust), /history/)
+  }
+})
 test('partial rerun counts old attempts, while multiple stages of current attempt cost once', async () => {
   const f = fixture([{ id: 100, run_attempt: 3 }])
   f.trust.attempt = 3
