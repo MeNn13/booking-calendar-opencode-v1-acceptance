@@ -256,6 +256,13 @@ async function main() {
     if (reply.files.some((f) => f.path === 'contract/main.tsp')) {
       // Invoke the same project-owned generator as mise run generate, using pinned Node.
       const generation = spawnSync(process.execPath, ['scripts/generate.mjs'], { stdio: 'ignore' })
+      if (
+        generation.status !== 0 &&
+        context.initial &&
+        !context.repair &&
+        context.phase === 'single'
+      )
+        throw new Error('generation_failed')
       check(generation.status === 0)
       const generatedPaths = git(['diff', '--name-only']).split('\n').filter(generated)
       const untracked = git(['ls-files', '--others', '--exclude-standard'])
@@ -340,6 +347,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
         await appendFile(process.env.GITHUB_STEP_SUMMARY, diagnostic + '\n').catch(() =>
           console.error('repair_summary_unavailable'),
         )
-    } else console.error('repair_failed')
+    } else
+      console.error(error.message === 'generation_failed' ? 'generation_failed' : 'repair_failed')
     process.exitCode = 1
   })

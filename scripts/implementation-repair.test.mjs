@@ -16,7 +16,7 @@ const reply = {
   rollback: 'Revert commit',
 }
 
-test('repair context supplies the UTC timestamp required by the publisher', async () => {
+test('repair context accepts both initial receipt generations and supplies a UTC timestamp', async () => {
   const repository = 'MeNn13/booking-calendar-opencode-v1-acceptance'
   const trustedSha = 'a'.repeat(40)
   const head = { sha: 'b'.repeat(40), repo: { full_name: repository } }
@@ -62,15 +62,19 @@ test('repair context supplies the UTC timestamp required by the publisher', asyn
       author_association: 'OWNER',
     },
   }
-  const { context } = await repairContext(
-    'issue_comment',
-    event,
-    previous,
-    original,
-    async (path, accept) => (accept === 'application/vnd.github.diff' ? '' : responses[path]),
-    { appId: previous.appId, runId: 9, trustedSha },
-  )
-  assert.match(context.commitDate, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
+  for (const phase of ['first', 'single']) {
+    const { context } = await repairContext(
+      'issue_comment',
+      event,
+      previous,
+      { ...original, initial: true, phase },
+      async (path, accept) => (accept === 'application/vnd.github.diff' ? '' : responses[path]),
+      { appId: previous.appId, runId: 9, trustedSha },
+    )
+    assert.match(context.commitDate, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
+    assert.equal(context.expectedHead, previous.head)
+    assert.equal(context.repair.previousRunId, previous.publisherRunId)
+  }
 })
 
 test('a skipped candidate verification does not request publisher approval', () => {
