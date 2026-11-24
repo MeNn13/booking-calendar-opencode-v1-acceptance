@@ -1,4 +1,72 @@
 import { createHash } from 'node:crypto'
+import { decodeModel } from './implementation-model-output.mjs'
+
+const fallbackModel = 'opencode/hy4-flash-free'
+const retryableProviderErrors = new Set([
+  'provider.no-route',
+  'provider.free-limit',
+  'provider.rate-limit',
+  'provider.internal',
+  'provider.transport',
+  'provider.timeout',
+])
+const otherProviderErrors = new Set([
+  'provider.auth',
+  'provider.quota',
+  'provider.invalid-request',
+  'provider.invalid-output',
+  'provider.unsupported-operation',
+  'permission.rejected',
+  'tool.execution',
+])
+
+function providerFailure(stdout) {
+  for (const line of (stdout ?? '').split(/\r?\n/)) {
+    let event
+    try {
+      event = JSON.parse(line)
+    } catch {
+      continue
+    }
+    if (event?.type !== 'error') continue
+    const { type, name, status, data } = event.error ?? {}
+    const category =
+      retryableProviderErrors.has(type) || otherProviderErrors.has(type)
+        ? type
+        : ['AgentNotFoundError', 'StepFailedError', 'APIError', 'ProviderAuthError'].includes(name)
+          ? name
+          : undefined
+    const responseStatus = status ?? data?.statusCode
+    return {
+      category,
+      status:
+        Number.isInteger(responseStatus) && responseStatus >= 100 && responseStatus <= 599
+          ? responseStatus
+          : undefined,
+    }
+  }
+  return {}
+}
+
+export function analyzeAuditWithModel(primary, invoke, reportFallback = () => {}) {
+  const models = [...new Set([primary, fallbackModel])]
+  for (const model of models) {
+    const child = invoke(model)
+    try {
+      return { model, verdict: decodeModel(child) }
+    } catch (error) {
+      const { category, status } = providerFailure(child.stdout)
+      const reason = `${model}: ${category ?? error.message}${status ? ` (HTTP ${status})` : ''}`
+      if (
+        model === models.at(-1) ||
+        !(retryableProviderErrors.has(category) || status === 429 || status >= 500)
+      ) {
+        throw new Error(reason)
+      }
+      reportFallback(reason)
+    }
+  }
+}
 
 function parseUrl(value) {
   return typeof value === 'string' && URL.canParse(value) ? new URL(value) : null
