@@ -25,6 +25,20 @@ test('mobile owner reads the empty calendar', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
+test('mobile guest reads the next step when no meeting types exist', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 })
+  await page.goto('/book')
+  const emptyTypes = page.getByRole('alert').filter({ hasText: 'Типы встреч ещё не созданы' })
+  await expect(
+    emptyTypes.getByText('Создайте тип встречи на странице владельца, чтобы открыть запись.'),
+  ).toBeVisible()
+  const ownerLink = emptyTypes.getByRole('link', { name: 'Страница владельца' })
+  await expect(ownerLink).toHaveAttribute('href', '/owner')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await ownerLink.click()
+  await expect(page).toHaveURL(/\/owner$/)
+})
+
 test('mobile guest keeps selected time and booking controls in view', async ({ page, context }) => {
   await page.setViewportSize({ width: 360, height: 640 })
   await page.goto('/owner')

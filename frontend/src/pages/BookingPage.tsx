@@ -356,6 +356,9 @@ export function BookingPage() {
                   <Alert color="blue" withCloseButton={false}>
                     <Stack gap="xs" align="flex-start">
                       <Text>Типы встреч ещё не созданы</Text>
+                      <Text fz="sm" c="dimmed">
+                        Создайте тип встречи на странице владельца, чтобы открыть запись.
+                      </Text>
                       <Anchor component={Link} to="/owner" size="sm">
                         Страница владельца
                       </Anchor>
