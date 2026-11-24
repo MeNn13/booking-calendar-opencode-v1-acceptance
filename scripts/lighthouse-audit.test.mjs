@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  analyzeAuditWithModel,
   publishAudit,
   readAuditReport,
   trainingReport,
@@ -8,6 +9,30 @@ import {
 } from './lighthouse-audit.mjs'
 
 const url = 'https://calendar.example.com/book'
+
+test('a provider route failure tries one free fallback and returns its verdict', () => {
+  const requested = []
+  const verdict = { summary: 'Конкретных находок нет.', finding: null }
+  const part = { sessionID: 'session', messageID: 'message' }
+  const stream = [
+    { type: 'text', sessionID: 'session', part: { ...part, text: JSON.stringify(verdict) } },
+    { type: 'step_finish', sessionID: 'session', part: { ...part, reason: 'stop' } },
+  ]
+    .map(JSON.stringify)
+    .join('\n')
+  const result = analyzeAuditWithModel('opencode/deepseek-v4.1-flash-free', (model) => {
+    requested.push(model)
+    if (requested.length === 1)
+      return {
+        status: 1,
+        stdout:
+          '{"type":"error","error":{"type":"provider.no-route","message":"private provider message"}}',
+      }
+    return { status: 0, stdout: stream }
+  })
+  assert.deepEqual(result, { model: 'opencode/hy4-flash-free', verdict })
+  assert.equal(requested.length, 2)
+})
 
 test('the repeatable training report identifies its source and provides one measured candidate', () => {
   const report = trainingReport(url)

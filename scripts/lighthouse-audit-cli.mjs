@@ -1,8 +1,8 @@
 import { spawnSync } from 'node:child_process'
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { decodeModel } from './implementation-model-output.mjs'
 import {
+  analyzeAuditWithModel,
   auditUrl,
   readAuditReport,
   trainingReport,
@@ -88,34 +88,39 @@ async function analyze() {
   const env = { ...process.env, OPENCODE_DISABLE_PROJECT_CONFIG: '1' }
   delete env.GH_TOKEN
   delete env.GITHUB_TOKEN
-  const child = spawnSync(
-    process.env.OPENCODE_BIN ?? 'opencode',
-    [
-      'run',
-      '--standalone',
-      '--format',
-      'json',
-      '--agent',
-      'discussion',
-      '--model',
-      config.model,
-      '--title',
-      'Lighthouse audit',
-    ],
-    {
-      cwd: directory,
-      env,
-      input: `${prompt}\n\nДанные отчёта (JSON):\n${JSON.stringify(report)}`,
-      encoding: 'utf8',
-      maxBuffer: 2_000_000,
-      timeout: 720_000,
-    },
-  )
-  const result = validateAuditResult(report, decodeModel(child))
+  const invoke = (model) =>
+    spawnSync(
+      process.env.OPENCODE_BIN ?? 'opencode',
+      [
+        'run',
+        '--standalone',
+        '--format',
+        'json',
+        '--agent',
+        'discussion',
+        '--model',
+        model,
+        '--title',
+        'Lighthouse audit',
+      ],
+      {
+        cwd: directory,
+        env,
+        input: `${prompt}\n\nДанные отчёта (JSON):\n${JSON.stringify(report)}`,
+        encoding: 'utf8',
+        maxBuffer: 2_000_000,
+        timeout: 330_000,
+      },
+    )
+  const { model, verdict } = analyzeAuditWithModel(config.model, invoke, (reason) => {
+    console.warn(`OpenCode: ${reason}. Пробуем резервную бесплатную модель.`)
+  })
+  const result = validateAuditResult(report, verdict)
   const json = JSON.stringify(result)
   if (json.includes(apiKey)) throw new Error('Ответ OpenCode содержит секрет.')
   await mkdir(process.env.AUDIT_RESULT_DIR, { recursive: true })
   await writeFile(join(process.env.AUDIT_RESULT_DIR, 'analysis.json'), json)
+  console.log(`Отчёт проанализирован моделью ${model}.`)
 }
 
 try {
