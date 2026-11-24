@@ -331,7 +331,9 @@ cp.spawnSync = (bin, args, opts) => {
     assert.equal(opts.env.GH_TOKEN, undefined)
     const head = spawn('git',['rev-parse','HEAD'],opts).stdout.trim()
     writeFileSync(join(process.env.INITIAL_IO,'checked'), head)
-    return {status: process.env.SCENARIO === 'check' ? 1 : 0}
+    return process.env.SCENARIO === 'check'
+      ? {status: 1, stdout: 'task_failed task=lint\\n', stderr: 'SECRET_MARKER'}
+      : {status: 0}
   }
   return spawn(bin,args,opts)
 }
@@ -390,6 +392,7 @@ syncBuiltinESMExports()
     assert.equal(child.status, category ? 1 : 0, child.stderr)
     if (category) {
       assert.equal(json('diagnostic').category, category, child.stderr)
+      if (scenario === 'check') assert.equal(json('diagnostic').task, 'lint')
       assert.match(readFileSync(path('summary'), 'utf8'), new RegExp(category))
       assert.doesNotMatch(child.stdout + child.stderr, /SECRET_MARKER/)
       assert.equal(existsSync(path('result.json')), false)
