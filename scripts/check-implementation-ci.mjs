@@ -127,6 +127,7 @@ const base = git('rev-parse', 'HEAD')
     } else {
       assert.equal(result.status, 1, result.stderr)
       assert.equal(json('diagnostic').category, 'check_failed', result.stderr)
+      assert.equal(json('diagnostic').task, 'lint', result.stderr)
       assert.equal(json('diagnostic').sha, git('rev-parse', 'HEAD'))
       assert.equal(existsSync(join(io, 'result.json')), false)
       assert.equal(existsSync(join(io, 'verification.json')), false)

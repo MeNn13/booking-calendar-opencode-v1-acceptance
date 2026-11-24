@@ -31,6 +31,7 @@ const fail = (category) => {
 let stage = 'preflight'
 let base
 let sha
+let checkDetail
 
 function run(bin, args, options = {}, timeout) {
   if (timeout !== undefined && timeout <= 0) fail('timeout')
@@ -333,12 +334,22 @@ function main() {
       context.deadline - Date.now(),
     )
     if (checked.status === 124) fail('timeout')
+    if (checked.status !== 0) {
+      // Only the trusted sandbox wrapper writes stdout. Candidate output is discarded.
+      const marker = checked.stdout?.trim()
+      const task = /^task_failed task=([a-z][a-z0-9:-]{0,40})$/.exec(marker)?.[1]
+      if (task) checkDetail = { task }
+      else if (marker === 'sandbox_launch' || marker === 'check_definition')
+        checkDetail = { reason: marker }
+      fail('check_failed')
+    }
     if (
-      checked.status !== 0 ||
       git(['rev-parse', 'HEAD']) !== sha ||
       git(['status', '--porcelain', '--untracked-files=no'])
-    )
+    ) {
+      checkDetail = { reason: 'checkout_changed' }
       fail('check_failed')
+    }
     stage = 'record'
     write(io, 'verification', {
       version: 1,
@@ -369,6 +380,7 @@ try {
     category,
     base: base ?? null,
     sha: shaPattern.test(sha) ? sha : null,
+    ...checkDetail,
     ...(Number.isInteger(error.status) ? { status: error.status } : {}),
   }
   write(io, 'diagnostic', diagnostic)
