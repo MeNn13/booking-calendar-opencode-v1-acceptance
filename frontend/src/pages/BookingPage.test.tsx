@@ -23,6 +23,8 @@ import type {
   createMeetingResponse,
 } from '../api/generated/booking'
 
+const EMPTY_TYPES_HINT = 'Создайте тип встречи на странице владельца, чтобы открыть запись.'
+
 const meetingTypes: MeetingType[] = [
   {
     id: 'znakomstvo',
@@ -183,6 +185,7 @@ describe('booking page', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Бронирование' })).toBeVisible()
     expect(await screen.findByRole('button', { name: /Знакомство/ })).toBeVisible()
     expect(screen.getByRole('button', { name: /Разбор/ })).toBeVisible()
+    expect(screen.queryByText(EMPTY_TYPES_HINT)).not.toBeInTheDocument()
     expect(screen.getByRole('table')).toBeVisible()
 
     await user.click(screen.getByRole('button', { name: /Знакомство/ }))
@@ -232,6 +235,7 @@ describe('booking page', () => {
     renderBookingPage()
 
     expect(screen.getByRole('status', { name: 'Загрузка типов встреч' })).toBeVisible()
+    expect(screen.queryByText(EMPTY_TYPES_HINT)).not.toBeInTheDocument()
     const dayButtons = within(screen.getByRole('table')).getAllByRole('button')
     expect(dayButtons.length).toBeGreaterThan(0)
     expect(dayButtons.every((button) => button.hasAttribute('disabled'))).toBe(true)
@@ -246,6 +250,7 @@ describe('booking page', () => {
     renderBookingPage()
 
     expect(await screen.findByText('Не удалось загрузить типы встреч')).toBeVisible()
+    expect(screen.queryByText(EMPTY_TYPES_HINT)).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Повторить' }))
 
@@ -263,6 +268,7 @@ describe('booking page', () => {
     renderBookingPage()
 
     expect(await screen.findByText('Типы встреч ещё не созданы')).toBeVisible()
+    expect(screen.getByText(EMPTY_TYPES_HINT)).toBeVisible()
     expect(screen.getByRole('link', { name: 'Страница владельца' })).toHaveAttribute(
       'href',
       '/owner',
