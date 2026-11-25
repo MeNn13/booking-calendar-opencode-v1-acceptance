@@ -109,11 +109,11 @@ async function analyze() {
         input: `${prompt}\n\nДанные отчёта (JSON):\n${JSON.stringify(report)}`,
         encoding: 'utf8',
         maxBuffer: 2_000_000,
-        timeout: 330_000,
+        timeout: 180_000,
       },
     )
   const { model, verdict } = analyzeAuditWithModel(config.model, invoke, (reason) => {
-    console.warn(`OpenCode: ${reason}. Пробуем резервную бесплатную модель.`)
+    console.warn(`OpenCode: ${reason}. Пробуем следующую бесплатную модель.`)
   })
   const result = validateAuditResult(report, verdict)
   const json = JSON.stringify(result)
