@@ -91,7 +91,9 @@ mise run check
 Режим `training` использует синтетическое измерение для демонстрации выпуска задачи.
 
 Отчёт хранится 14 дней в артефакте `lighthouse-report`. OpenCode анализирует
-проверки с измеримой потенциальной экономией. Издатель создаёт отдельный issue
+проверки с измеримой потенциальной экономией. При временной ошибке DeepSeek
+первым резервом служит GPT-OSS 20B через Cloudflare Workers AI. Результат
+анализа сохраняется в `lighthouse-analysis`. Издатель создаёт отдельный issue
 по новой находке и добавляет в него ссылку на прогон. При повторе Summary
 ссылается на исходный issue, включая закрытые задачи. Вывод без находок или
 статус «нет данных» сохраняется в постоянном issue аудита из `AUDIT_STATUS_ISSUE`.
@@ -104,12 +106,20 @@ mise run check
 - [Первый `live` из `main`](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/actions/runs/45417700302)
   проверил страницу бронирования `/book` на Render. Lighthouse дал 97 из 100
   и сохранил исходный JSON в артефакте `lighthouse-report`.
-- [Повторный `live`](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/actions/runs/45420316020)
-  и [последний `training`](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/actions/runs/45438505048)
-  сохранили отчёты. На этапе анализа основная и резервная модели OpenCode
-  вернули `provider.free-limit` (HTTP 429). Приёмка публикации остаётся открытой.
-  После восстановления лимита нужно получить вывод агента, создать учебный
-  issue и подтвердить отсутствие дубля вторым учебным прогоном.
+- [Один из ранних прогонов](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/actions/runs/45612951213)
+  сохранил отчёт, но встроенные бесплатные модели OpenCode вернули HTTP 429
+  или ошибку маршрутизации.
+- [Успешный `training` из `main`](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/actions/runs/45618120255)
+  сохранил отчёт и вывод GPT-OSS 20B. Издатель автоматически создал
+  [учебный issue #42](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/issues/42)
+  по синтетической находке о ресурсах, блокирующих отрисовку.
+- [Повторный `training` из `main`](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/actions/runs/45618420169)
+  завершился успешно. В репозитории остался один учебный issue по этой находке,
+  без повторного комментария.
+- [Успешный `live` из `main`](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/actions/runs/45618461216)
+  проверил `/book` на Render и получил 96 из 100. GPT-OSS 20B разобрал отчёт,
+  и издатель создал [issue #43](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/issues/43)
+  о неиспользуемом JavaScript с оценкой потенциальной экономии из Lighthouse.
 - Для итогов без новой находки настроен [журнал аудита #35](https://github.com/MeNn13/booking-calendar-opencode-v1-acceptance/issues/35).
 
 ### Личные выводы о работе GitHub-агента
