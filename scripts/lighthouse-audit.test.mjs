@@ -10,7 +10,7 @@ import {
 
 const url = 'https://calendar.example.com/book'
 
-test('a provider route failure tries one free fallback and returns its verdict', () => {
+test('retryable failures try the free models in order and return the first verdict', () => {
   const requested = []
   const verdict = { summary: 'Конкретных находок нет.', finding: null }
   const part = { sessionID: 'session', messageID: 'message' }
@@ -22,16 +22,21 @@ test('a provider route failure tries one free fallback and returns its verdict',
     .join('\n')
   const result = analyzeAuditWithModel('opencode/deepseek-v4.1-flash-free', (model) => {
     requested.push(model)
-    if (requested.length === 1)
+    if (model === 'opencode/mimo-v2.6-flash-free') return { error: { code: 'ETIMEDOUT' } }
+    if (model !== 'opencode/nemotron-3.5-lightning-free')
       return {
         status: 1,
-        stdout:
-          '{"type":"error","error":{"type":"provider.no-route","message":"private provider message"}}',
+        stdout: '{"type":"error","error":{"type":"provider.free-limit","status":429}}',
       }
     return { status: 0, stdout: stream }
   })
-  assert.deepEqual(result, { model: 'opencode/hy4-flash-free', verdict })
-  assert.equal(requested.length, 2)
+  assert.deepEqual(result, { model: 'opencode/nemotron-3.5-lightning-free', verdict })
+  assert.deepEqual(requested, [
+    'opencode/deepseek-v4.1-flash-free',
+    'opencode/hy4-flash-free',
+    'opencode/mimo-v2.6-flash-free',
+    'opencode/nemotron-3.5-lightning-free',
+  ])
 })
 
 test('the repeatable training report identifies its source and provides one measured candidate', () => {

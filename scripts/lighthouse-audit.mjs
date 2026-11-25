@@ -1,7 +1,11 @@
 import { createHash } from 'node:crypto'
 import { decodeModel } from './implementation-model-output.mjs'
 
-const fallbackModel = 'opencode/hy4-flash-free'
+const fallbackModels = [
+  'opencode/hy4-flash-free',
+  'opencode/mimo-v2.6-flash-free',
+  'opencode/nemotron-3.5-lightning-free',
+]
 const retryableProviderErrors = new Set([
   'provider.no-route',
   'provider.free-limit',
@@ -49,13 +53,16 @@ function providerFailure(stdout) {
 }
 
 export function analyzeAuditWithModel(primary, invoke, reportFallback = () => {}) {
-  const models = [...new Set([primary, fallbackModel])]
+  const models = [...new Set([primary, ...fallbackModels])]
   for (const model of models) {
     const child = invoke(model)
     try {
       return { model, verdict: decodeModel(child) }
     } catch (error) {
-      const { category, status } = providerFailure(child.stdout)
+      const { category, status } =
+        child.error?.code === 'ETIMEDOUT'
+          ? { category: 'provider.timeout' }
+          : providerFailure(child.stdout)
       const reason = `${model}: ${category ?? error.message}${status ? ` (HTTP ${status})` : ''}`
       if (
         model === models.at(-1) ||
