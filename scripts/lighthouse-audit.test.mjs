@@ -37,6 +37,21 @@ test('retryable failures try the free models in order and return the first verdi
     'opencode/mimo-v2.6-flash-free',
     'opencode/nemotron-3.5-lightning-free',
   ])
+
+  requested.length = 0
+  const gemini = 'google/gemini-3.1-flash-lite'
+  const withGemini = analyzeAuditWithModel(
+    'opencode/deepseek-v4.1-flash-free',
+    (model) => {
+      requested.push(model)
+      return model === gemini
+        ? { status: 0, stdout: stream }
+        : { status: 1, stdout: '{"type":"error","error":{"type":"provider.free-limit"}}' }
+    },
+    { geminiAvailable: true },
+  )
+  assert.deepEqual(withGemini, { model: gemini, verdict })
+  assert.deepEqual(requested, ['opencode/deepseek-v4.1-flash-free', gemini])
 })
 
 test('the repeatable training report identifies its source and provides one measured candidate', () => {
