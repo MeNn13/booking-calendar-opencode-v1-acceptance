@@ -52,6 +52,21 @@ test('retryable failures try the free models in order and return the first verdi
   )
   assert.deepEqual(withGemini, { model: gemini, verdict })
   assert.deepEqual(requested, ['opencode/deepseek-v4.1-flash-free', gemini])
+
+  requested.length = 0
+  const cloudflare = 'cloudflare-workers-ai/@cf/openai/gpt-oss-20b'
+  const withCloudflare = analyzeAuditWithModel(
+    'opencode/deepseek-v4.1-flash-free',
+    (model) => {
+      requested.push(model)
+      return model === cloudflare
+        ? { status: 0, stdout: stream }
+        : { status: 1, stdout: '{"type":"error","error":{"type":"provider.free-limit"}}' }
+    },
+    { cloudflareAvailable: true, geminiAvailable: true },
+  )
+  assert.deepEqual(withCloudflare, { model: cloudflare, verdict })
+  assert.deepEqual(requested, ['opencode/deepseek-v4.1-flash-free', cloudflare])
 })
 
 test('the repeatable training report identifies its source and provides one measured candidate', () => {

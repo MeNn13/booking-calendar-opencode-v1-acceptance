@@ -77,6 +77,8 @@ async function collect() {
 async function analyze() {
   const apiKey = process.env.OPENCODE_API_KEY
   const geminiKey = process.env.GEMINI_API_KEY
+  const cloudflareKey = process.env.CLOUDFLARE_API_KEY
+  const cloudflareAvailable = Boolean(cloudflareKey && process.env.CLOUDFLARE_ACCOUNT_ID)
   if (!apiKey) throw new Error('Нужен секрет OPENCODE_API_KEY.')
   const collection = JSON.parse(await readFile(join(directory, 'collection.json'), 'utf8'))
   const report = readAuditReport(
@@ -110,16 +112,17 @@ async function analyze() {
         input: `${prompt}\n\nДанные отчёта (JSON):\n${JSON.stringify(report)}`,
         encoding: 'utf8',
         maxBuffer: 2_000_000,
-        timeout: 144_000,
+        timeout: 120_000,
       },
     )
   const { model, verdict } = analyzeAuditWithModel(config.model, invoke, {
+    cloudflareAvailable,
     geminiAvailable: Boolean(geminiKey),
     reportFallback: (reason) => console.warn(`OpenCode: ${reason}. Пробуем следующую модель.`),
   })
   const result = validateAuditResult(report, verdict)
   const json = JSON.stringify(result)
-  if (json.includes(apiKey) || (geminiKey && json.includes(geminiKey))) {
+  if ([apiKey, geminiKey, cloudflareKey].some((key) => key && json.includes(key))) {
     throw new Error('Ответ OpenCode содержит секрет.')
   }
   await mkdir(process.env.AUDIT_RESULT_DIR, { recursive: true })

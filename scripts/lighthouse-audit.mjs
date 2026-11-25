@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { decodeModel } from './implementation-model-output.mjs'
 
+const cloudflareModel = 'cloudflare-workers-ai/@cf/openai/gpt-oss-20b'
 const geminiModel = 'google/gemini-3.1-flash-lite'
 const fallbackModels = [
   'opencode/hy4-flash-free',
@@ -56,10 +57,15 @@ function providerFailure(stdout) {
 export function analyzeAuditWithModel(
   primary,
   invoke,
-  { geminiAvailable = false, reportFallback = () => {} } = {},
+  { cloudflareAvailable = false, geminiAvailable = false, reportFallback = () => {} } = {},
 ) {
   const models = [
-    ...new Set([primary, ...(geminiAvailable ? [geminiModel] : []), ...fallbackModels]),
+    ...new Set([
+      primary,
+      ...(cloudflareAvailable ? [cloudflareModel] : []),
+      ...(geminiAvailable ? [geminiModel] : []),
+      ...fallbackModels,
+    ]),
   ]
   for (const model of models) {
     const child = invoke(model)

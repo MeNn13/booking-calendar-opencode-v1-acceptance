@@ -6,12 +6,14 @@
 `APP_URL` с публичным HTTPS-адресом страницы бронирования,
 например `https://booking-calendar-i16y.onrender.com/book`. Создайте постоянный
 issue для итогов аудита и сохраните его номер в `AUDIT_STATUS_ISSUE`.
-Для анализа используется секрет `OPENCODE_API_KEY`. Если задан `GEMINI_API_KEY`
-из проекта Google AI Studio на бесплатном тарифе, первым резервом после
-временной ошибки DeepSeek V4.1 Flash Free служит Gemini 3.1 Flash-Lite.
-Затем OpenCode пробует Hy4 Flash Free, MiMo V2.6 Flash Free и Nemotron 3.5 Lightning Free.
-Каждая попытка ограничена 144 секундами. При общем лимите OpenCode его модели
-могут вернуть HTTP 429. У Gemini отдельная квота Google.
+Для анализа используется секрет `OPENCODE_API_KEY`. После временной ошибки
+DeepSeek V4.1 Flash Free первым резервом служит GPT-OSS 20B через Cloudflare
+Workers AI, если заданы `CLOUDFLARE_API_KEY` (секрет) и `CLOUDFLARE_ACCOUNT_ID`
+(переменная). На тарифе Workers Free модель использует бесплатную квоту Workers AI.
+Следующий резерв — Gemini 3.1 Flash-Lite при наличии секрета `GEMINI_API_KEY`
+из проекта Google AI Studio на бесплатном тарифе. Затем OpenCode пробует
+Hy4 Flash Free, MiMo V2.6 Flash Free и Nemotron 3.5 Lightning Free.
+На каждую модель отводится до двух минут.
 
 В **Actions → Lighthouse audit → Run workflow** выберите `main` и режим `live`.
 В Summary проверьте вывод OpenCode, а в Artifacts скачайте `lighthouse-report`.

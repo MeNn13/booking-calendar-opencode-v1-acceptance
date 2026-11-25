@@ -85,8 +85,10 @@ jobs:
           sudo mkdir -p /etc/opencode
           jq '.update = "disable" |
             .permissions = [{action:"*", resource:"*", effect:"deny"}] |
+            .providers["cloudflare-workers-ai"].settings.apiKey = "{env:CLOUDFLARE_API_KEY}" |
             .policies |= (map(select(.action != "tool.use" or .effect == "deny")) +
-              [{action:"provider.use", resource:"google", effect:"allow"}])' \
+              [{action:"provider.use", resource:"google", effect:"allow"},
+               {action:"provider.use", resource:"cloudflare-workers-ai", effect:"allow"}])' \
             .github/opencode/opencode.json | sudo tee /etc/opencode/opencode.json > /dev/null
       - name: Analyze report with OpenCode
         run: node scripts/lighthouse-audit-cli.mjs analyze
@@ -95,6 +97,8 @@ jobs:
           AUDIT_RESULT_DIR: ${{ runner.temp }}/lighthouse-analysis
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: lighthouse-analysis
