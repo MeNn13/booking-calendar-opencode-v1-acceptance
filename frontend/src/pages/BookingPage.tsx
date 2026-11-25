@@ -324,6 +324,7 @@ export function BookingPage() {
                   timeZone ?? 'Europe/Moscow',
                 )}
               </Text>
+              <Text>Длительность: {confirmation.durationMinutes} мин</Text>
               <Text className={classes.confirmationText}>{confirmation.guestName}</Text>
               <Button onClick={bookAgain}>Записаться ещё</Button>
             </Stack>
