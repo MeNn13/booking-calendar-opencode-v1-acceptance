@@ -6,11 +6,12 @@
 `APP_URL` с публичным HTTPS-адресом страницы бронирования,
 например `https://booking-calendar-i16y.onrender.com/book`. Создайте постоянный
 issue для итогов аудита и сохраните его номер в `AUDIT_STATUS_ISSUE`.
-Для анализа используется существующий секрет `OPENCODE_API_KEY`.
-После временной ошибки DeepSeek V4.1 Flash Free OpenCode последовательно
-пробует Hy4 Flash Free, MiMo V2.6 Flash Free и Nemotron 3.5 Lightning Free.
-Каждая попытка ограничена тремя минутами. При общем лимите OpenCode все модели
-могут вернуть HTTP 429.
+Для анализа используется секрет `OPENCODE_API_KEY`. Если задан `GEMINI_API_KEY`
+из проекта Google AI Studio на бесплатном тарифе, первым резервом после
+временной ошибки DeepSeek V4.1 Flash Free служит Gemini 3.1 Flash-Lite.
+Затем OpenCode пробует Hy4 Flash Free, MiMo V2.6 Flash Free и Nemotron 3.5 Lightning Free.
+Каждая попытка ограничена 144 секундами. При общем лимите OpenCode его модели
+могут вернуть HTTP 429. У Gemini отдельная квота Google.
 
 В **Actions → Lighthouse audit → Run workflow** выберите `main` и режим `live`.
 В Summary проверьте вывод OpenCode, а в Artifacts скачайте `lighthouse-report`.

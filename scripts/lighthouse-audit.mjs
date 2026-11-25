@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { decodeModel } from './implementation-model-output.mjs'
 
+const geminiModel = 'google/gemini-3.1-flash-lite'
 const fallbackModels = [
   'opencode/hy4-flash-free',
   'opencode/mimo-v2.6-flash-free',
@@ -52,8 +53,14 @@ function providerFailure(stdout) {
   return {}
 }
 
-export function analyzeAuditWithModel(primary, invoke, reportFallback = () => {}) {
-  const models = [...new Set([primary, ...fallbackModels])]
+export function analyzeAuditWithModel(
+  primary,
+  invoke,
+  { geminiAvailable = false, reportFallback = () => {} } = {},
+) {
+  const models = [
+    ...new Set([primary, ...(geminiAvailable ? [geminiModel] : []), ...fallbackModels]),
+  ]
   for (const model of models) {
     const child = invoke(model)
     try {
