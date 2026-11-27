@@ -2,7 +2,7 @@ import { Button, Container, Paper, SimpleGrid, Stack, Text, Title } from '@manti
 import { Link } from 'react-router'
 
 const capabilities = [
-  'Выбрать тип встречи и её длительность',
+  'Выбрать тип и длительность встречи',
   'Забронировать свободный слот на 14 дней вперёд в рабочие часы Пн–Пт, 10:00–18:00 (МСК)',
   'Записаться без регистрации — достаточно имени',
 ]
@@ -23,7 +23,7 @@ export function HomePage() {
 
         <div>
           <Title order={2} mb="md">
-            Возможности
+            Как работает запись
           </Title>
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
             {capabilities.map((capability) => (
